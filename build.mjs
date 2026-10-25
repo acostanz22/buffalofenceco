@@ -164,6 +164,27 @@ function related(slugs) {
   return `<div class="related">${links}</div>`;
 }
 
+function serviceGallery(s) {
+  const alt = (services.find((x) => s.related.includes(x.slug) && x.image !== s.image)) || services.find((x) => x.slug !== s.slug && x.image !== s.image);
+  const shots = [s, alt]
+    .filter(Boolean)
+    .map(
+      (x) => `<figure class="service-shot"><img src="${x.image}" alt="${esc(x.alt)}" width="800" height="533" loading="lazy" decoding="async"></figure>`
+    )
+    .join("");
+  return `<div class="service-gallery">${shots}</div>`;
+}
+
+function sideLinks(slugs) {
+  const items = slugs
+    .map((slug) => {
+      const x = services.find((y) => y.slug === slug);
+      return `<li><a href="${slug}">${esc(x.nav)}</a></li>`;
+    })
+    .join("");
+  return `<ul class="side-links">${items}</ul>`;
+}
+
 function businessNode() {
   return {
     "@type": ["HomeAndConstructionBusiness", "GeneralContractor"],
@@ -438,9 +459,10 @@ for (const s of services) {
     { href: "services.html", label: "Services" },
     { href: s.slug, label: s.name }
   ];
-  const body = `<section class="page-hero">
-    <div class="wrap">
-      ${crumbs(crumbItems)}
+  const body = `<div class="crumb-bar"><div class="wrap">${crumbs(crumbItems)}</div></div>
+  <section class="hero slim-hero service-hero">
+    <div class="wrap service-hero-inner">
+      <p class="eyebrow">${esc(s.nav)}</p>
       <h1>${esc(s.h1)}</h1>
       <p class="lede">${esc(s.lede)}</p>
       <div class="hero-actions">
@@ -449,45 +471,47 @@ for (const s of services) {
       </div>
     </div>
   </section>
-  <section class="section">
-    <div class="wrap split">
-      <img src="${s.image}" alt="${esc(s.alt)}" width="800" height="533">
-      <div>
-        <h2>${esc(s.whenTitle)}</h2>
-        ${paras(s.when)}
+  <section class="section service-body">
+    <div class="wrap service-layout">
+      <div class="service-main">
+        ${serviceGallery(s)}
+        <div class="service-copy">
+          <h2>${esc(s.whenTitle)}</h2>
+          ${paras(s.when)}
+          <h2>${esc(s.processTitle)}</h2>
+          <ol class="steps">
+            ${s.process.map((step) => `<li class="step"><h3>${esc(step.t)}</h3><p>${esc(step.d)}</p></li>`).join("")}
+          </ol>
+          <h2>${esc(s.costTitle)}</h2>
+          <p class="intro">We do not publish a price list. These are the details that move an estimate.</p>
+          <div class="factor-grid">
+            ${s.costs.map((c) => `<article class="factor"><h3>${esc(c.t)}</h3><p>${esc(c.d)}</p></article>`).join("")}
+          </div>
+          <h2>Questions before you call</h2>
+          ${faqBlock(s.faqs)}
+        </div>
       </div>
+      <aside class="service-aside" aria-label="Estimate and related services">
+        <div class="side-card">
+          <p class="side-kicker">Talk through the line</p>
+          <p>Call or send the lot details. We will tell you if the job is a repair, a replacement, or a different material than you started with.</p>
+          <p class="side-phone"><a class="phone-link-lg" href="tel:${TEL}">${PHONE}</a></p>
+          <p><a class="btn" href="contact.html#quote">Request an estimate</a></p>
+        </div>
+        <div class="side-card side-card-muted">
+          <p class="side-kicker">Related</p>
+          ${sideLinks(s.related)}
+        </div>
+      </aside>
     </div>
   </section>
-  <section class="section section-tight">
+  <section class="section section-towns" style="padding-top:0">
     <div class="wrap">
-      <h2>${esc(s.processTitle)}</h2>
-      <ol class="steps">
-        ${s.process.map((step) => `<li class="step"><h3>${esc(step.t)}</h3><p>${esc(step.d)}</p></li>`).join("")}
-      </ol>
+      <h2>Towns we serve</h2>
+      <div class="related">${locations.map((l) => `<a href="${l.slug}">${esc(l.name)}</a>`).join("")}</div>
+      <p class="towns-links"><a href="service-areas.html">Service area</a> &middot; <a href="contact.html#quote">Request an estimate</a> &middot; <a href="services.html">All services</a></p>
     </div>
-  </section>
-  <section class="section section-tight">
-    <div class="wrap">
-      <h2>${esc(s.costTitle)}</h2>
-      <p class="intro">We do not publish a price list. These are the details that move an estimate.</p>
-      <div class="factor-grid">
-        ${s.costs.map((c) => `<article class="factor"><h3>${esc(c.t)}</h3><p>${esc(c.d)}</p></article>`).join("")}
-      </div>
-    </div>
-  </section>
-  <section class="section section-tight">
-    <div class="wrap">
-      <h2>Questions before you call</h2>
-      ${faqBlock(s.faqs)}
-    </div>
-  </section>
-  <section class="section section-tight">
-    <div class="wrap">
-      <h2>Related fence work</h2>
-      ${related(s.related)}
-    </div>
-  </section>
-  ${cta("Get an estimate for this fence", "Send the approximate length, the city, and whether this is a new line or a repair. We will tell you if a different material fits the lot better.")}`;
+  </section>`;
   write(
     s.slug,
     layout({
