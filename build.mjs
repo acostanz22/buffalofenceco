@@ -63,6 +63,15 @@ function nav(active, quoteHref) {
   </header>`;
 }
 
+const OFFICE_HOURS = "Monday–Sunday: 7 am – 7 pm";
+const OFFICE_HOURS_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const OFFICE_HOURS_TIME = "7 am – 7 pm";
+
+function officeHoursBlock() {
+  const rows = OFFICE_HOURS_DAYS.map((day) => `<div><span>${day}</span><span>${OFFICE_HOURS_TIME}</span></div>`).join("");
+  return `<div class="hours-list">${rows}</div>`;
+}
+
 function footer() {
   const svc = services.map((s) => `<li><a href="${s.slug}">${esc(s.nav)}</a></li>`).join("");
   return `<footer class="site-footer">
@@ -92,6 +101,10 @@ function footer() {
           <li><a href="faq.html">Fence FAQs</a></li>
           <li><a href="sitemap.xml">Sitemap</a></li>
         </ul>
+      </div>
+      <div>
+        <h2>Office Hours</h2>
+        ${officeHoursBlock()}
       </div>
     </div>
     <div class="wrap fine">
@@ -496,6 +509,7 @@ for (const s of services) {
           <p class="side-kicker">Talk through the line</p>
           <p>Call or send the lot details. We will tell you if the job is a repair, a replacement, or a different material than you started with.</p>
           <p class="side-phone"><a class="phone-link-lg" href="tel:${TEL}">${PHONE}</a></p>
+          <p class="side-hours">${OFFICE_HOURS}</p>
           <p><a class="btn" href="contact.html#quote">Request an estimate</a></p>
         </div>
         <div class="side-card side-card-muted">
