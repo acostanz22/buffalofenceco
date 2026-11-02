@@ -423,7 +423,7 @@ const homeBody = `<section class="hero" id="top">
 </section>
 <section class="section bg-paper" id="why-choose-us">
   <div class="wrap">
-    <h2>Why choose ${NAME}</h2>
+    <h2>Why Choose Us</h2>
     <p class="intro">A fence is a long-term purchase, so we focus on the parts that decide whether it holds up.</p>
     <div class="panel-grid panel-grid-4">
       <article class="panel">
@@ -501,7 +501,7 @@ const homeBody = `<section class="hero" id="top">
 </section>
 <section class="section bg-paper" id="faq">
   <div class="wrap">
-    <h2>Frequently Asked Questions</h2>
+    <h2>FAQ</h2>
     ${faqBlock(allHomeFaqs)}
     <p style="margin-top:16px"><a href="faq.html">More fence questions</a></p>
   </div>
