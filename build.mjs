@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { services, locations, homeFaqs } from "./data.mjs";
+import { homeIntro, serviceIntros, locationIntros, pageIntros } from "./intros.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const SITE = "https://www.albuquerquefencecompany.net";
@@ -77,7 +78,7 @@ function footer() {
   return `<footer class="site-footer">
     <div class="wrap footer-grid">
       <div>
-        <h2>Company</h2>
+        <div class="footer-logo">${logo("index.html")}</div>
         <p>Fence installation and repair for homes, acreage, and commercial lots in Albuquerque and nearby communities.</p>
         <p>Service-area business. No public storefront.</p>
         <p><a href="tel:${TEL}">${PHONE}</a></p>
@@ -97,7 +98,7 @@ function footer() {
         <ul>
           <li><a href="service-areas.html">Service Areas</a></li>
           <li><a href="services.html">All services</a></li>
-          <li><a href="contact.html#quote">Request an estimate</a></li>
+          <li><a href="#quote">Request an estimate</a></li>
           <li><a href="faq.html">Fence FAQs</a></li>
           <li><a href="sitemap.xml">Sitemap</a></li>
         </ul>
@@ -345,13 +346,57 @@ function pageGraph({ canonical, title, description, crumbsItems, faqs, service }
   return graph;
 }
 
+// Every page carries 5-6 complete sentences in its header intro, starting with the business name.
+function checkIntro(label, text) {
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  if (!text.startsWith(NAME) || sentences.length < 5 || sentences.length > 6) {
+    console.error(`Intro problem on ${label}: ${sentences.length} sentences, starts with name: ${text.startsWith(NAME)}`);
+    process.exit(1);
+  }
+  return text;
+}
+
+// Slim hero with page-specific H1, intro, and the quote form on the right.
+function pageHero({ crumbItems, eyebrow, h1, intro, label, extra = "" }) {
+  return `<div class="crumb-bar"><div class="wrap">${crumbs(crumbItems)}</div></div>
+  <section class="hero slim-hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">${esc(eyebrow)}</p>
+        <h1>${esc(h1)}</h1>
+        <p class="lede">${checkIntro(label, intro)}</p>
+        <div class="hero-actions">
+          <a class="btn" href="tel:${TEL}">Call ${PHONE}</a>
+          <a class="btn btn-ghost" href="#quote">Request a free quote</a>
+        </div>
+        ${extra}
+      </div>
+      ${quoteCard()}
+    </div>
+  </section>`;
+}
+
+const FEATURED_GALLERY = ["wood-fencing.html", "vinyl-fencing.html", "aluminum-fencing.html", "picket-fencing.html", "farm-fencing.html", "metal-fencing.html"];
+
+const timelineFaqs = [
+  {
+    q: "How long does fence installation take?",
+    a: "It depends on the footage, the material, the ground, and how soon materials arrive. A short residential run can go faster than a long acreage line or a site with rock. We talk through the schedule after the on-site evaluation and the estimate, and we do not promise a date before we have seen the property."
+  },
+  {
+    q: "How do I maintain my fence?",
+    a: "Wood needs a sealer or stain on a regular schedule, and loose boards or leaning posts should be fixed early. Vinyl and aluminum mostly need an occasional wash and a check of the hardware. Chain link and metal fences do best when chips in the coating are touched up and gates are kept lubricated and aligned."
+  }
+];
+const allHomeFaqs = [...homeFaqs, ...timelineFaqs];
+
 function cta(heading, text) {
   return `<section class="cta-band">
     <div class="wrap">
       <h2>${esc(heading)}</h2>
       <p class="lede">${text}</p>
       <div class="actions">
-        <a class="btn" href="contact.html#quote">Request an estimate</a>
+        <a class="btn" href="#quote">Request a free quote</a>
         <a class="btn btn-ghost" href="tel:${TEL}">Call ${PHONE}</a>
       </div>
     </div>
@@ -362,68 +407,88 @@ function write(file, html) {
   fs.writeFileSync(path.join(root, file), html);
 }
 
-const homeBody = `<section class="hero">
+const homeBody = `<section class="hero" id="top">
   <div class="wrap hero-grid">
     <div>
       <p class="eyebrow">Albuquerque, New Mexico</p>
-      <h1>Fence Company in Albuquerque, NM</h1>
-      <p class="lede"><a href="wood-fencing.html">Wood</a>, <a href="vinyl-fencing.html">vinyl</a>, <a href="aluminum-fencing.html">aluminum</a>, <a href="chain-link-fencing.html">chain link</a>, and <a href="metal-fencing.html">steel</a> fences for houses, acreage, and commercial lots. New lines, <a href="fence-repair.html">repairs</a>, and <a href="gate-installation.html">gates</a> — quoted from the property, not a catalog.</p>
+      <h1>Fence Company Albuquerque NM</h1>
+      <p class="lede">${checkIntro("home", homeIntro)}</p>
       <div class="hero-actions">
-        <a class="btn" href="#quote">Request an estimate</a>
+        <a class="btn" href="#quote">Request a free quote</a>
         <a class="btn btn-ghost" href="tel:${TEL}">Call ${PHONE}</a>
       </div>
     </div>
     ${quoteCard()}
   </div>
 </section>
-<section class="section">
+<section class="section bg-paper" id="why-choose-us">
   <div class="wrap">
-    <h2>What we install and fix</h2>
-    <p class="intro">Start with the job, then the material. A backyard screen, a horse lot, a front-yard picket, and a storage yard are not the same fence.</p>
+    <h2>Why choose ${NAME}</h2>
+    <p class="intro">A fence is a long-term purchase, so we focus on the parts that decide whether it holds up.</p>
+    <div class="panel-grid panel-grid-4">
+      <article class="panel">
+        <h3>Workmanship that fits the ground</h3>
+        <p>Caliche, rock, slope, and wind change how deep posts go and how a line is laid out. We plan for the lot instead of using one standard layout.</p>
+      </article>
+      <article class="panel">
+        <h3>Clear communication</h3>
+        <p>You get a straight answer on whether the job is a repair, a replacement, or a different material. We explain the options before the estimate is final.</p>
+      </article>
+      <article class="panel">
+        <h3>The right material for the job</h3>
+        <p>A backyard screen, a horse lot, a front-yard picket, and a storage yard are different fences. We match wood, vinyl, aluminum, chain link, or steel to what the fence has to do.</p>
+      </article>
+      <article class="panel">
+        <h3>Estimates from the property</h3>
+        <p>Price depends on footage, height, gates, and ground conditions. We quote from the actual property rather than a catalog price.</p>
+      </article>
+    </div>
+  </div>
+</section>
+<section class="section bg-cream" id="services">
+  <div class="wrap">
+    <h2>Our Fence Services</h2>
+    <p class="intro">Start with the job, then the material. Select a service to see how it works, what changes the price, and which towns it fits.</p>
     ${cards(services)}
   </div>
 </section>
-<section class="section" style="padding-top:0">
+<section class="section bg-sand" id="gallery">
   <div class="wrap">
-    <div class="panel-grid">
-      <article class="panel">
-        <h2>Houses</h2>
-        <p>Backyard privacy, pet yards, low front-yard fences, and replacements on city and subdivision lots. Most Albuquerque house jobs are wood or vinyl, with a gate that clears the mower, or chain link where a screen is not the point.</p>
-        <p><a href="services.html">See residential fence services</a></p>
-      </article>
-      <article class="panel">
-        <h2>Lots and sites</h2>
-        <p>Acreage needs rail, wire, or pipe. A commercial yard needs a heavier chain-link spec and a gate a truck can use. A backyard panel is the wrong product for both.</p>
-        <p><a href="farm-fencing.html">Farm fencing</a> · <a href="commercial-fencing.html">Commercial fencing</a></p>
-      </article>
+    <h2>Our Gallery</h2>
+    <p class="intro">Representative photos of the fence styles we install. These images illustrate each style and are not a record of our completed jobs.</p>
+    <div class="gallery-grid">
+      ${FEATURED_GALLERY.map((slug) => {
+        const s = services.find((x) => x.slug === slug);
+        return `<figure class="gallery-item"><img src="${s.image}" alt="${esc(s.alt)}" width="800" height="533" loading="lazy" decoding="async"><figcaption>${esc(s.name)}</figcaption></figure>`;
+      }).join("")}
     </div>
   </div>
 </section>
-<section class="section" style="padding-top:0">
+<section class="section bg-paper" id="reviews">
   <div class="wrap">
-    <h2>How to choose a fence for the lot</h2>
-    <ul class="choose">
-      <li><h3>Name the job</h3><p>Screen a yard, contain a dog, hold livestock, or secure a work site. Those four goals pick the material faster than a style photo.</p></li>
-      <li><h3>Account for wind and caliche</h3><p>Solid panels catch spring wind, especially on the West Mesa. A lot of the digging is caliche or rock, and that changes the posts.</p></li>
-      <li><h3>Count the openings</h3><p>A fence with the wrong gate is a daily problem. Walk gates, drive gates, and farm gates are part of the layout.</p></li>
-      <li><h3>Repair what is still sound</h3><p>Tight posts can take new panels. Posts that have walked out of line cannot. Start with <a href="fence-repair.html">fence repair</a> if the line is mostly intact.</p></li>
-    </ul>
-  </div>
-</section>
-<section class="section" style="padding-top:0">
-  <div class="wrap split">
-    <img src="images/gates.jpg" alt="Fence hinge hardware being adjusted" width="800" height="533">
-    <div>
-      <h2>Repairs and gates</h2>
-      <p>Leaning posts, missing boards, and dragging gates are a large share of the calls. If the rest of the line is sound, we repair it. If the posts have failed, we will say replacement is the better spend.</p>
-      <p><a href="fence-repair.html">Fence repair</a> · <a href="gate-installation.html">Gates</a></p>
+    <h2>Customer Reviews</h2>
+    <div class="review-note">
+      <p>We have not published customer reviews on this website yet, and we will not invent them. Verified reviews will be added here once customers have given permission to share them.</p>
+      <p>If you would like to know more about how we work before you decide, call <a href="tel:${TEL}">${PHONE}</a> and ask your questions, or <a href="#quote">send the quote form</a>.</p>
     </div>
   </div>
 </section>
-<section class="section" style="padding-top:0">
+<section class="section bg-cream" id="process">
   <div class="wrap">
-    <h2>Service area</h2>
-    <p class="intro">We schedule fence work in Albuquerque and nearby communities. The towns below are the ones we plan around. Rules, soil, and lot size change from one to the next.</p>
+    <h2>Our Process</h2>
+    <p class="intro">Four simple steps from the first call to a finished fence.</p>
+    <ol class="steps">
+      <li class="step"><h3>Request a quote</h3><p>Use the form or call ${PHONE} with your city, the material you have in mind, and roughly how much fence you need.</p></li>
+      <li class="step"><h3>Discuss the project</h3><p>We talk through the goal, the gates, the ground, and any HOA or permit rules, and arrange an on-site evaluation when it is needed.</p></li>
+      <li class="step"><h3>Receive an estimate</h3><p>You get an estimate built from the footage, height, material, gates, and ground conditions of the property.</p></li>
+      <li class="step"><h3>Schedule installation</h3><p>Once you approve the estimate, we schedule the work and plan the timeline around materials and site conditions.</p></li>
+    </ol>
+  </div>
+</section>
+<section class="section bg-sand" id="areas">
+  <div class="wrap">
+    <h2>Areas We Serve</h2>
+    <p class="intro">We schedule fence work in Albuquerque and nearby communities. Rules, soil, and lot size change from one town to the next.</p>
     <div class="area-grid">
       ${locations
         .map(
@@ -434,22 +499,22 @@ const homeBody = `<section class="hero">
     <p style="margin-top:16px"><a href="service-areas.html">All service areas</a></p>
   </div>
 </section>
-<section class="section" style="padding-top:0">
+<section class="section bg-paper" id="faq">
   <div class="wrap">
-    <h2>Questions before you call</h2>
-    ${faqBlock(homeFaqs)}
+    <h2>Frequently Asked Questions</h2>
+    ${faqBlock(allHomeFaqs)}
     <p style="margin-top:16px"><a href="faq.html">More fence questions</a></p>
   </div>
 </section>
-${cta("Ready to talk through the line?", `Call ${PHONE} or send the lot details. We will tell you if the job is a repair, a replacement, or a different material than you started with.`)}`;
+${cta("Request a Free Quote", `Call ${PHONE} or send the lot details through the quote form. We will tell you if the job is a repair, a replacement, or a different material than you started with.`)}`;
 
 const homeCanonical = `${SITE}/`;
 write(
   "index.html",
   layout({
-    title: "Fence Company in Albuquerque, NM | Albuquerque Fence Company",
+    title: "Fence Company Albuquerque NM | Vinyl Fence, Wood Fence, Aluminum Fence & More",
     description:
-      "Wood, vinyl, chain link, aluminum, and metal fence installation and repair in Albuquerque, NM. Gates and farm fencing. Call (505) 210-9903 for an estimate.",
+      "Albuquerque Fence Company installs and repairs wood, vinyl, aluminum, chain link, and metal fences in Albuquerque, NM. Gates and farm fencing. Call (505) 210-9903 for a free quote.",
     canonical: homeCanonical,
     active: "index.html",
     quoteHref: "#quote",
@@ -457,10 +522,10 @@ write(
     body: homeBody,
     graph: pageGraph({
       canonical: homeCanonical,
-      title: "Fence Company in Albuquerque, NM",
+      title: "Fence Company Albuquerque NM | Vinyl Fence, Wood Fence, Aluminum Fence & More",
       description:
         "Fence installation and repair in Albuquerque, New Mexico for homes, acreage, and commercial lots.",
-      faqs: homeFaqs
+      faqs: allHomeFaqs
     })
   })
 );
@@ -472,19 +537,8 @@ for (const s of services) {
     { href: "services.html", label: "Services" },
     { href: s.slug, label: s.name }
   ];
-  const body = `<div class="crumb-bar"><div class="wrap">${crumbs(crumbItems)}</div></div>
-  <section class="hero slim-hero service-hero">
-    <div class="wrap service-hero-inner">
-      <p class="eyebrow">${esc(s.nav)}</p>
-      <h1>${esc(s.h1)}</h1>
-      <p class="lede">${esc(s.lede)}</p>
-      <div class="hero-actions">
-        <a class="btn" href="tel:${TEL}">Call ${PHONE}</a>
-        <a class="btn btn-ghost" href="contact.html#quote">Request an estimate</a>
-      </div>
-    </div>
-  </section>
-  <section class="section service-body">
+  const body = `${pageHero({ crumbItems, eyebrow: s.nav, h1: s.h1, intro: serviceIntros[s.slug], label: s.slug })}
+  <section class="section service-body bg-cream">
     <div class="wrap service-layout">
       <div class="service-main">
         ${serviceGallery(s)}
@@ -510,7 +564,7 @@ for (const s of services) {
           <p>Call or send the lot details. We will tell you if the job is a repair, a replacement, or a different material than you started with.</p>
           <p class="side-phone"><a class="phone-link-lg" href="tel:${TEL}">${PHONE}</a></p>
           <p class="side-hours">${OFFICE_HOURS}</p>
-          <p><a class="btn" href="contact.html#quote">Request an estimate</a></p>
+          <p><a class="btn" href="#quote">Request an estimate</a></p>
         </div>
         <div class="side-card side-card-muted">
           <p class="side-kicker">Related</p>
@@ -519,11 +573,11 @@ for (const s of services) {
       </aside>
     </div>
   </section>
-  <section class="section section-towns" style="padding-top:0">
+  <section class="section section-towns bg-sand">
     <div class="wrap">
       <h2>Towns we serve</h2>
       <div class="related">${locations.map((l) => `<a href="${l.slug}">${esc(l.name)}</a>`).join("")}</div>
-      <p class="towns-links"><a href="service-areas.html">Service area</a> &middot; <a href="contact.html#quote">Request an estimate</a> &middot; <a href="services.html">All services</a></p>
+      <p class="towns-links"><a href="service-areas.html">Service area</a> &middot; <a href="#quote">Request an estimate</a> &middot; <a href="services.html">All services</a></p>
     </div>
   </section>`;
   write(
@@ -533,7 +587,7 @@ for (const s of services) {
       description: s.description,
       canonical,
       active: s.slug,
-      quoteHref: "contact.html#quote",
+      quoteHref: "#quote",
       body,
       graph: pageGraph({
         canonical,
@@ -554,18 +608,8 @@ for (const l of locations) {
     { href: "service-areas.html", label: "Service areas" },
     { href: l.slug, label: l.name }
   ];
-  const body = `<section class="page-hero">
-    <div class="wrap">
-      ${crumbs(crumbItems)}
-      <h1>${esc(l.title)}</h1>
-      <p class="lede">${esc(l.lede)}</p>
-      <div class="hero-actions">
-        <a class="btn" href="tel:${TEL}">Call ${PHONE}</a>
-        <a class="btn btn-ghost" href="contact.html#quote">Request an estimate</a>
-      </div>
-    </div>
-  </section>
-  <section class="section">
+  const body = `${pageHero({ crumbItems, eyebrow: `${l.name}, New Mexico`, h1: l.title, intro: locationIntros[l.slug], label: l.slug })}
+  <section class="section bg-cream">
     <div class="wrap split">
       <img src="${l.image}" alt="${esc(l.alt)}" width="800" height="533">
       <div>
@@ -574,20 +618,20 @@ for (const l of locations) {
       </div>
     </div>
   </section>
-  <section class="section section-tight">
+  <section class="section section-tight bg-paper">
     <div class="wrap">
       <h2>Materials that fit these lots</h2>
       <p>${esc(l.materials)}</p>
       ${related(l.services)}
     </div>
   </section>
-  <section class="section section-tight">
+  <section class="section section-tight bg-sand">
     <div class="wrap">
       <h2>Permits and local rules</h2>
       <p>${esc(l.permits)}</p>
     </div>
   </section>
-  <section class="section section-tight">
+  <section class="section section-tight bg-paper">
     <div class="wrap">
       <h2>Questions from ${esc(l.name)}</h2>
       ${faqBlock(l.faqs)}
@@ -601,7 +645,7 @@ for (const l of locations) {
       description: l.description,
       canonical,
       active: "service-areas.html",
-      quoteHref: "contact.html#quote",
+      quoteHref: "#quote",
       body,
       graph: pageGraph({
         canonical,
@@ -615,21 +659,17 @@ for (const l of locations) {
   );
 }
 
-const servicesBody = `<section class="page-hero">
-  <div class="wrap">
-    ${crumbs([
-      { href: "index.html", label: "Home" },
-      { href: "services.html", label: "Services" }
-    ])}
-    <h1>Fence Services in Albuquerque, NM</h1>
-    <p class="lede">Each fence on this list is a different job. Pick the one that matches the yard, the animals, or the site, then call ${PHONE} if you are between two of them.</p>
-    <div class="hero-actions">
-      <a class="btn" href="tel:${TEL}">Call ${PHONE}</a>
-      <a class="btn btn-ghost" href="contact.html#quote">Request an estimate</a>
-    </div>
-  </div>
-</section>
-<section class="section">
+const servicesBody = `${pageHero({
+  crumbItems: [
+    { href: "index.html", label: "Home" },
+    { href: "services.html", label: "Services" }
+  ],
+  eyebrow: "Albuquerque, New Mexico",
+  h1: "Fence Services in Albuquerque, NM",
+  intro: pageIntros.services,
+  label: "services"
+})}
+<section class="section bg-cream">
   <div class="wrap">
     ${cards(services)}
   </div>
@@ -644,7 +684,7 @@ write(
       "Wood, vinyl, chain link, aluminum, metal, picket, farm, commercial fencing, gates, and fence repair in Albuquerque, NM. Call (505) 210-9903.",
     canonical: `${SITE}/services.html`,
     active: "services.html",
-    quoteHref: "contact.html#quote",
+    quoteHref: "#quote",
     body: servicesBody,
     graph: pageGraph({
       canonical: `${SITE}/services.html`,
@@ -658,21 +698,17 @@ write(
   })
 );
 
-const areasBody = `<section class="page-hero">
-  <div class="wrap">
-    ${crumbs([
-      { href: "index.html", label: "Home" },
-      { href: "service-areas.html", label: "Service areas" }
-    ])}
-    <h1>Fence Service Areas around Albuquerque</h1>
-    <p class="lede">We work in Albuquerque and the nearby communities listed here. Soil, wind, lot size, and the permit office change by town. The page for each place covers the fence work, not a town history.</p>
-    <div class="hero-actions">
-      <a class="btn" href="tel:${TEL}">Call ${PHONE}</a>
-      <a class="btn btn-ghost" href="contact.html#quote">Request an estimate</a>
-    </div>
-  </div>
-</section>
-<section class="section">
+const areasBody = `${pageHero({
+  crumbItems: [
+    { href: "index.html", label: "Home" },
+    { href: "service-areas.html", label: "Service areas" }
+  ],
+  eyebrow: "Albuquerque, New Mexico",
+  h1: "Fence Service Areas around Albuquerque",
+  intro: pageIntros.areas,
+  label: "service-areas"
+})}
+<section class="section bg-cream">
   <div class="wrap">
     <div class="area-grid">
       ${locations
@@ -693,7 +729,7 @@ write(
       "Fence installation and repair in Albuquerque, Rio Rancho, Corrales, Los Ranchos, Bernalillo, Placitas, Los Lunas, Bosque Farms, Belen, Edgewood, Tijeras, and Cedar Crest.",
     canonical: `${SITE}/service-areas.html`,
     active: "service-areas.html",
-    quoteHref: "contact.html#quote",
+    quoteHref: "#quote",
     body: areasBody,
     graph: pageGraph({
       canonical: `${SITE}/service-areas.html`,
@@ -722,19 +758,19 @@ const extraFaqs = [
   }
 ];
 
-const faqBody = `<section class="page-hero">
+const faqBody = `${pageHero({
+  crumbItems: [
+    { href: "index.html", label: "Home" },
+    { href: "faq.html", label: "FAQs" }
+  ],
+  eyebrow: "Albuquerque, New Mexico",
+  h1: "Fence Questions in Albuquerque",
+  intro: pageIntros.faq,
+  label: "faq"
+})}
+<section class="section bg-cream">
   <div class="wrap">
-    ${crumbs([
-      { href: "index.html", label: "Home" },
-      { href: "faq.html", label: "FAQs" }
-    ])}
-    <h1>Fence Questions in Albuquerque</h1>
-    <p class="lede">Straight answers on price, soil, materials, permits, and wind repairs. Service pages go deeper on each product.</p>
-  </div>
-</section>
-<section class="section">
-  <div class="wrap">
-    ${faqBlock([...homeFaqs, ...extraFaqs])}
+    ${faqBlock([...allHomeFaqs, ...extraFaqs])}
     <h2 style="margin-top:36px">Questions about a specific fence</h2>
     ${related(services.map((s) => s.slug))}
   </div>
@@ -749,7 +785,7 @@ write(
       "Answers on Albuquerque fence cost, caliche, permits, materials, HOA rules, and wind-damage repair. Call (505) 210-9903.",
     canonical: `${SITE}/faq.html`,
     active: "faq.html",
-    quoteHref: "contact.html#quote",
+    quoteHref: "#quote",
     body: faqBody,
     graph: pageGraph({
       canonical: `${SITE}/faq.html`,
@@ -759,26 +795,22 @@ write(
         { href: "index.html", label: "Home" },
         { href: "faq.html", label: "FAQs" }
       ],
-      faqs: [...homeFaqs, ...extraFaqs]
+      faqs: [...allHomeFaqs, ...extraFaqs]
     })
   })
 );
 
-const aboutBody = `<section class="page-hero">
-  <div class="wrap">
-    ${crumbs([
-      { href: "index.html", label: "Home" },
-      { href: "about.html", label: "About" }
-    ])}
-    <h1>About Albuquerque Fence Company</h1>
-    <p class="lede">We install and repair fences for homes, acreage, and commercial lots in Albuquerque and nearby towns. This is a service-area business. There is no public storefront to visit.</p>
-    <div class="hero-actions">
-      <a class="btn" href="tel:${TEL}">Call ${PHONE}</a>
-      <a class="btn btn-ghost" href="contact.html#quote">Request an estimate</a>
-    </div>
-  </div>
-</section>
-<section class="section">
+const aboutBody = `${pageHero({
+  crumbItems: [
+    { href: "index.html", label: "Home" },
+    { href: "about.html", label: "About" }
+  ],
+  eyebrow: "About us",
+  h1: "About Albuquerque Fence Company",
+  intro: pageIntros.about,
+  label: "about"
+})}
+<section class="section bg-cream">
   <div class="wrap">
     <h2>What we actually do</h2>
     <p>The work is wood, vinyl, chain link, aluminum, steel and iron, picket, and farm fencing, plus gates and repairs. The old site called the company Albuquerque's Premier Fence Company. The work is the same: a fence quoted from the property.</p>
@@ -797,7 +829,7 @@ write(
       "Albuquerque Fence Company installs and repairs wood, vinyl, metal, chain link, and farm fences in Albuquerque and nearby communities. Call (505) 210-9903.",
     canonical: `${SITE}/about.html`,
     active: "about.html",
-    quoteHref: "contact.html#quote",
+    quoteHref: "#quote",
     body: aboutBody,
     graph: pageGraph({
       canonical: `${SITE}/about.html`,
@@ -811,22 +843,32 @@ write(
   })
 );
 
-const contactBody = `<section class="page-hero">
+const contactBody = `${pageHero({
+  crumbItems: [
+    { href: "index.html", label: "Home" },
+    { href: "contact.html", label: "Contact" }
+  ],
+  eyebrow: "Contact us",
+  h1: "Request a Fence Estimate",
+  intro: pageIntros.contact,
+  label: "contact"
+})}
+<section class="section bg-cream">
   <div class="wrap">
-    ${crumbs([
-      { href: "index.html", label: "Home" },
-      { href: "contact.html", label: "Contact" }
-    ])}
-    <h1>Request a Fence Estimate</h1>
-    <p class="lede">Call ${PHONE} or use the form. Include the city and what the fence needs to do. We do not take payment through this form.</p>
-    <div class="hero-actions">
-      <a class="btn" href="tel:${TEL}">Call ${PHONE}</a>
+    <h2>What to include in your request</h2>
+    <div class="panel-grid panel-grid-4">
+      <article class="panel"><h3>Your city</h3><p>Rules, soil, and wind change from town to town, so the city tells us where to start.</p></article>
+      <article class="panel"><h3>Material and height</h3><p>Wood, vinyl, aluminum, chain link, steel, or a repair. If you are unsure, describe what the fence has to do.</p></article>
+      <article class="panel"><h3>Footage and gates</h3><p>A rough length is fine. Tell us how many walk or drive gates you need and whether an old fence must come out.</p></article>
+      <article class="panel"><h3>HOA or property-line notes</h3><p>Send any written HOA standard. You confirm the property line, and we do not survey.</p></article>
     </div>
   </div>
 </section>
-<section class="section">
-  <div class="wrap" style="max-width:760px">
-    ${quoteCard()}
+<section class="section bg-sand">
+  <div class="wrap">
+    <h2>Prefer to talk?</h2>
+    <p>Call <a href="tel:${TEL}">${PHONE}</a>. Office hours are ${OFFICE_HOURS}. This is a service-area business, so there is no public storefront to visit.</p>
+    <p><a href="service-areas.html">See the service area</a> &middot; <a href="services.html">See the services</a></p>
   </div>
 </section>`;
 
@@ -852,17 +894,17 @@ write(
   })
 );
 
-const privacyBody = `<section class="page-hero">
-  <div class="wrap">
-    ${crumbs([
-      { href: "index.html", label: "Home" },
-      { href: "privacy.html", label: "Privacy" }
-    ])}
-    <h1>Privacy Policy</h1>
-    <p class="lede">This page explains what the estimate form collects and how it is used.</p>
-  </div>
-</section>
-<section class="section">
+const privacyBody = `${pageHero({
+  crumbItems: [
+    { href: "index.html", label: "Home" },
+    { href: "privacy.html", label: "Privacy" }
+  ],
+  eyebrow: "Legal",
+  h1: "Privacy Policy",
+  intro: pageIntros.privacy,
+  label: "privacy"
+})}
+<section class="section bg-cream">
   <div class="wrap">
     <p>The quote form is embedded from Tally. It asks for the details you type, such as your name and how to reach you, plus notes about the fence job. A hidden field named source is set to ${NAME} so estimate requests from this website can be told apart from requests sent on other sites.</p>
     <p>We use that information to reply about the fence estimate. Do not send payment card numbers or other financial account details through the form. Phone calls go to ${PHONE} and are not stored by this website.</p>
@@ -878,7 +920,7 @@ write(
       "How Albuquerque Fence Company uses estimate requests sent through the quote form, including the source field that identifies this website.",
     canonical: `${SITE}/privacy.html`,
     active: "privacy.html",
-    quoteHref: "contact.html#quote",
+    quoteHref: "#quote",
     body: privacyBody,
     graph: pageGraph({
       canonical: `${SITE}/privacy.html`,
